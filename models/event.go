@@ -43,6 +43,21 @@ func (e *Event) Save() error {
 	return err
 }
 
+func GetEventById(id int64) (*Event, error) {
+	query := `SELECT * FROM events where id = ?`
+	row := db.DB.QueryRow(query, id) // rows equals obgect type *sql.Rows = cursor (stream)
+
+	// not need close
+	// defer row.Close() - it will be closed automatically
+
+	var event Event
+	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
+	if err != nil {
+		return nil, err
+	}
+	return &event, nil
+}
+
 func GetAllEvents() ([]Event, error) {
 	query := `SELECT * FROM events`
 	rows, err := db.DB.Query(query) // rows equals obgect type *sql.Rows = cursor (stream)
