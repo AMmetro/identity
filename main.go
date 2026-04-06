@@ -4,11 +4,15 @@ import (
 	"fmt"
 	"net/http"
 
+	"github.com/AMmetro/identity/db"
 	"github.com/AMmetro/identity/models"
 	"github.com/gin-gonic/gin"
+	// "github.com/rest-api/identity/db"
+	// "github.com/rest-api/identity/models"
 )
 
 func main() {
+	db.InitDB()
 	server := gin.Default()
 
 	server.GET("/events", getEvents)
@@ -20,7 +24,11 @@ func main() {
 }
 
 func getEvents(context *gin.Context) {
-	events := models.GetEvents()
+	events, err := models.GetAllEvents()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
 	context.JSON(http.StatusOK, events)
 }
 
@@ -32,10 +40,10 @@ func createEvent(context *gin.Context) {
 		return
 	}
 
-	event.UserID = 1
-	event.ID = 1
-
-	event.Save()
+	err = event.Save()
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+	}
 
 	context.JSON(http.StatusCreated, gin.H{"message": "Event created successfully!", "event": event})
 }
