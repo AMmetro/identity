@@ -54,15 +54,37 @@ func FindByEmail(email string) (*User, error) {
 }
 
 func (u *User) ValidateCredentials() error {
-	existingUser, err := FindByEmail(u.Email)
+
+	/*
+	* In that case we have return userId manualy from FindByEmail
+	 */
+	// existingUser, err := FindByEmail(u.Email)
+	// if err != nil {
+	// 	return errors.New("Credentials is invalid")
+	// }
+
+	// passwordIsValid := utils.CheckPasswordHash(u.Password, existingUser.Password)
+	// if !passwordIsValid {
+	// 	return errors.New("Credentials is invalid")
+	// }
+	// return nil
+
+	/*
+	* In that case we bind userId to USER with pointer (u *User) - important!
+	 */
+	query := `SELECT id, password FROM users WHERE email = ?`
+	row := db.DB.QueryRow(query, u.Email)
+
+	var retrievedPassword string
+	err := row.Scan(&u.ID, &retrievedPassword)
+
 	if err != nil {
-		return errors.New("Credentials is invalid")
+		return errors.New("No such user in DB")
 	}
 
-	passwordIsValid := utils.CheckPasswordHash(u.Password, existingUser.Password)
+	passwordIsValid := utils.CheckPasswordHash(u.Password, retrievedPassword)
 	if !passwordIsValid {
 		return errors.New("Credentials is invalid")
 	}
-
 	return nil
 }

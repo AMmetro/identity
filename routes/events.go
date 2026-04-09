@@ -66,12 +66,14 @@ func createEvent(context *gin.Context) {
 		token = strings.TrimSpace(authHeader[7:])
 	}
 
-	if err := utils.Verifytoken(token); err != nil {
+	userId, err := utils.Verifytoken(token)
+	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
 	var event models.Event
+	event.UserID = userId
 	// Use ShouldBindJSON for binding validation
 	if err := context.ShouldBindJSON(&event); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})

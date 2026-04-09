@@ -24,13 +24,13 @@ func signup(context *gin.Context) {
 }
 
 func login(context *gin.Context) {
-	var user models.User
+	var user models.User // there user have id = ZERO value
 	err := context.BindJSON(&user)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = user.ValidateCredentials()
+	err = user.ValidateCredentials() // in function we atach userId to user
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
