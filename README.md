@@ -24,3 +24,6 @@ GET http://localhost:8080/events
     - db:            initial DB
     - utils:         utils
      
+
+<!-- todo  -->
+# replace routs with server registrations

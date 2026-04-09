@@ -5,10 +5,8 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"github.com/AMmetro/identity/models"
-	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
 	validator "github.com/go-playground/validator/v10"
 )
@@ -55,25 +53,12 @@ func formatValidationErrors(err error) []string {
 }
 
 func createEvent(context *gin.Context) {
-	authHeader := context.Request.Header.Get("Authorization") // Header = map[string][]string
-	// authHeader := context.GetHeader("Authorization") // updated wrapper with Gin
-	if authHeader == "" {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
-		return
-	}
-	token := authHeader
-	if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
-		token = strings.TrimSpace(authHeader[7:])
-	}
 
-	userId, err := utils.Verifytoken(token)
-	if err != nil {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
-		return
-	}
+	userId := context.GetInt64("userId")
 
 	var event models.Event
 	event.UserID = userId
+
 	// Use ShouldBindJSON for binding validation
 	if err := context.ShouldBindJSON(&event); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})
@@ -94,10 +79,16 @@ func updateEvent(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "could not parse id", "error": err.Error()})
 		return
 	}
-	_, err = models.GetEventById(eventId)
+
+	event, err := models.GetEventById(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "not found event with id", "error": err.Error()})
-		fmt.Printf("Not found event with id %d: %s\n", eventId, err.Error())
+		return
+	}
+
+	userId := context.GetInt64("userId")
+	if event.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "you can't update this event"})
 		return
 	}
 
@@ -148,6 +139,12 @@ func deleteEvent(context *gin.Context) {
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "not found event with id"})
 		fmt.Printf("Not found event with id %d: %s\n", eventId, err.Error())
+		return
+	}
+
+	userId := context.GetInt64("userId")
+	if deletedEvent.UserID != userId {
+		context.JSON(http.StatusUnauthorized, gin.H{"message": "you can't delete this event"})
 		return
 	}
 
