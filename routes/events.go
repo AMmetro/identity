@@ -1,12 +1,16 @@
 package routes
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
+	validator "github.com/go-playground/validator/v10"
 )
 
 func getEvents(context *gin.Context) {
@@ -32,22 +36,54 @@ func getEvent(context *gin.Context) {
 	context.JSON(http.StatusOK, event)
 }
 
-func createEvent(context *gin.Context) {
+func formatValidationErrors(err error) []string {
+	var vErrs validator.ValidationErrors
+	if errors.As(err, &vErrs) {
+		out := make([]string, 0, len(vErrs))
+		for _, ve := range vErrs {
+			field := ve.Field() // short name of the struct field
+			switch ve.Tag() {
+			case "required":
+				out = append(out, fmt.Sprintf("%s is required", field))
+			default:
+				out = append(out, fmt.Sprintf("%s failed on the '%s' tag", field, ve.Tag()))
+			}
+		}
+		return out
+	}
+	return []string{err.Error()}
+}
 
-	var event models.Event
-	err := context.BindJSON(&event) // if error send it to client automatically
-	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+func createEvent(context *gin.Context) {
+	authHeader := context.Request.Header.Get("Authorization") // Header = map[string][]string
+	// authHeader := context.GetHeader("Authorization") // updated wrapper with Gin
+	if authHeader == "" {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
+		return
+	}
+	token := authHeader
+	if strings.HasPrefix(strings.ToLower(authHeader), "bearer ") {
+		token = strings.TrimSpace(authHeader[7:])
+	}
+
+	if err := utils.Verifytoken(token); err != nil {
+		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	err = event.Save()
-	if err != nil {
+	var event models.Event
+	// Use ShouldBindJSON for binding validation
+	if err := context.ShouldBindJSON(&event); err != nil {
+		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})
+		return
+	}
+
+	if err := event.Save(); err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	context.JSON(http.StatusCreated, gin.H{"message": "Event created successfully!", "event": event})
+	context.JSON(http.StatusCreated, gin.H{"message": "event created successfully", "event": event})
 }
 
 func updateEvent(context *gin.Context) {
@@ -56,7 +92,6 @@ func updateEvent(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "could not parse id", "error": err.Error()})
 		return
 	}
-	// existEvent, err := models.GetEventById(eventId)
 	_, err = models.GetEventById(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "not found event with id", "error": err.Error()})
@@ -67,7 +102,7 @@ func updateEvent(context *gin.Context) {
 	var updatedEvent models.Event
 	err = context.ShouldBindJSON(&updatedEvent)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})
 		return
 	}
 
