@@ -15,5 +15,12 @@ POST http://localhost:8080/events
 # getEvent: 
 GET http://localhost:8080/events
 
-<!-- added main routes commit -->
-
+# Routes:
+    - routes:    all routs 
+        - events:    events controlers
+        - users:     users controlers
+    
+    - models:        repositories 
+    - db:            initial DB
+    - utils:         utils
+     

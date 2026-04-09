@@ -1,6 +1,8 @@
 package models
 
 import (
+	"errors"
+
 	"github.com/AMmetro/identity/db"
 	"github.com/AMmetro/identity/utils"
 )
@@ -51,12 +53,16 @@ func FindByEmail(email string) (*User, error) {
 	return &user, nil
 }
 
-func (u *User) ValidateCredentials() (bool, error) {
-	res, err := FindByEmail(u.Email)
+func (u *User) ValidateCredentials() error {
+	existingUser, err := FindByEmail(u.Email)
 	if err != nil {
-		return false, err
+		return errors.New("Credentials is invalid")
 	}
 
-	isValid := utils.CheckPasswordHash(u.Password, res.Password)
-	return isValid, nil
+	passwordIsValid := utils.CheckPasswordHash(u.Password, existingUser.Password)
+	if !passwordIsValid {
+		return errors.New("Credentials is invalid")
+	}
+
+	return nil
 }

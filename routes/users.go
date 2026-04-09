@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
 )
 
@@ -29,17 +30,17 @@ func login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	// result, err := models.FindByEmail(user.Email)
-	isValid, err := user.ValidateCredentials()
+	err = user.ValidateCredentials()
 	if err != nil {
-		context.JSON(http.StatusInternalServerError, gin.H{"Not found user with email": err.Error()})
+		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	if isValid {
-		context.JSON(http.StatusOK, gin.H{"message": "User logged in successfully!"})
-	} else {
-		context.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
+	token, err := utils.GenerateToken(user.Email, int(user.ID))
+	if err != nil {
+		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
 	}
 
+	context.JSON(http.StatusOK, gin.H{"token": token})
 }

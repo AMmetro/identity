@@ -33,6 +33,7 @@ func getEvent(context *gin.Context) {
 }
 
 func createEvent(context *gin.Context) {
+
 	var event models.Event
 	err := context.BindJSON(&event) // if error send it to client automatically
 	if err != nil {
