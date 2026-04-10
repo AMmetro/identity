@@ -46,8 +46,10 @@ func (e *Event) Save() error {
 func GetEventById(id int64) (*Event, error) {
 	query := `SELECT * FROM events where id = ?`
 	row := db.DB.QueryRow(query, id) // rows equals obgect type *sql.Rows = cursor (stream)
+
 	// not need close
 	// defer row.Close() - it will be closed automatically
+
 	var event Event
 	err := row.Scan(&event.ID, &event.Name, &event.Description, &event.Location, &event.DateTime, &event.UserID)
 	if err != nil {
@@ -100,15 +102,4 @@ func (event Event) DeleteEvent() error {
 	defer stmt.Close()
 	_, err = stmt.Exec(event.ID)
 	return err
-}
-
-func (e Event) RegisterForEvent(userId int64) (int64, error) {
-	query := `INSERT INTO registrations (event_id, user_id) VALUES (?, ?)`
-
-	result, err := db.DB.Exec(query, e.ID, userId)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.LastInsertId()
 }
