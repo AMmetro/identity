@@ -6,12 +6,13 @@ import (
 	"strconv"
 
 	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/services"
 	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
 )
 
 func getEvents(context *gin.Context) {
-	events, err := models.GetAllEvents()
+	events, err := services.GetAllEvents()
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -25,7 +26,7 @@ func getEvent(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"message": "could not parse id", "error": err.Error()})
 		return
 	}
-	event, err := models.GetEventById(eventId)
+	event, err := services.GetEventByID(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -38,19 +39,18 @@ func createEvent(context *gin.Context) {
 	var event models.Event
 	event.UserID = userId
 
-	// Use ShouldBindJSON for binding validation
 	if err := context.ShouldBindJSON(&event); err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"errors": utils.FormatValidationErrors(err)})
 		return
 	}
 
-	err := event.Save()
+	// Create event and register creator atomically
+	regID, err := services.CreateEventAndRegister(&event, userId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-	event.RegisterForEvent(userId)
-	context.JSON(http.StatusCreated, gin.H{"message": "event created and registered", "event": event})
+	context.JSON(http.StatusCreated, gin.H{"message": "event created and registered", "event": event, "registrationId": regID})
 }
 
 func updateEvent(context *gin.Context) {
@@ -60,7 +60,7 @@ func updateEvent(context *gin.Context) {
 		return
 	}
 
-	event, err := models.GetEventById(eventId)
+	event, err := services.GetEventByID(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "not found event with id", "error": err.Error()})
 		return
@@ -80,7 +80,7 @@ func updateEvent(context *gin.Context) {
 	}
 
 	updatedEvent.ID = eventId
-	err = updatedEvent.UpdateEvent()
+	err = services.UpdateEvent(&updatedEvent)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -115,7 +115,7 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
-	deletedEvent, err := models.GetEventById(eventId)
+	deletedEvent, err := services.GetEventByID(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"message": "not found event with id"})
 		fmt.Printf("Not found event with id %d: %s\n", eventId, err.Error())
@@ -128,7 +128,7 @@ func deleteEvent(context *gin.Context) {
 		return
 	}
 
-	err = deletedEvent.DeleteEvent()
+	err = services.DeleteEvent(eventId)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

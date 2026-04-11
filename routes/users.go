@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/services"
 	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
 )
@@ -15,7 +16,7 @@ func signup(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = user.Save()
+	err = services.RegisterUser(&user)
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
@@ -30,13 +31,13 @@ func login(context *gin.Context) {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-	err = user.ValidateCredentials() // in function we atach userId to user
+	userId, err := services.AuthenticateUser(user.Email, user.Password)
 	if err != nil {
 		context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		return
 	}
 
-	token, err := utils.GenerateToken(user.Email, int(user.ID))
+	token, err := utils.GenerateToken(user.Email, int(userId))
 	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return

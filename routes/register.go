@@ -3,27 +3,17 @@ package routes
 import (
 	"net/http"
 	"strconv"
-	"time"
 
-	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/services"
 	"github.com/gin-gonic/gin"
 )
-
-type Event struct {
-	ID          int64
-	Name        string    `binding:"required"`
-	Description string    `binding:"required"`
-	Location    string    `binding:"required"`
-	DateTime    time.Time `binding:"required"`
-	UserID      int64
-}
 
 type UpdateRegistrationStatusInput struct {
 	Status string `json:"status" binding:"required"`
 }
 
 func getRegistrations(c *gin.Context) {
-	registrations, err := models.GetAllRegistrations()
+	registrations, err := services.GetAllRegistrations()
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"cant`t get registrations ": err.Error()})
 		return
@@ -51,9 +41,7 @@ func updateRegistrationStatus(c *gin.Context) {
 		return
 	}
 
-	var event models.Event
-	event.ID = eventId
-	err = event.UpdateRegistration(userId, updatedStatus.Status)
+	err = services.UpdateRegistrationStatus(eventId, userId, updatedStatus.Status)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, err.Error())
 		return
