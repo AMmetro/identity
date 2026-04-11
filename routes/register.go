@@ -3,40 +3,35 @@ package routes
 import (
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/AMmetro/identity/models"
 	"github.com/gin-gonic/gin"
 )
 
-func registerForEvent(c *gin.Context) {
-	userId := c.GetInt64("userId")
-	if userId == 0 {
-		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
-		return
-	}
-	eventId, err := strconv.ParseInt(c.Param("id"), 10, 64)
-	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"message": "invalid event id"})
-		return
-	}
-	event, err := models.GetEventById(eventId)
-	if err != nil {
-		c.JSON(http.StatusNotFound, gin.H{"message": "event not found"})
-		return
-	}
-	registrationId, err := event.RegisterForEvent(userId)
-	if err != nil {
-		// check for UNIQUE constraint UNIQUE(event_id, user_id)
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "could not register"})
-		return
-	}
-	c.JSON(http.StatusOK, gin.H{
-		"message":        "Successfully registered",
-		"registrationId": registrationId,
-	})
+type Event struct {
+	ID          int64
+	Name        string    `binding:"required"`
+	Description string    `binding:"required"`
+	Location    string    `binding:"required"`
+	DateTime    time.Time `binding:"required"`
+	UserID      int64
 }
 
-func cancelRegistration(c *gin.Context) {
+type UpdateRegistrationStatusInput struct {
+	Status string `json:"status" binding:"required"`
+}
+
+func getRegistrations(c *gin.Context) {
+	registrations, err := models.GetAllRegistrations()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"cant`t get registrations ": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, registrations)
+}
+
+func updateRegistrationStatus(c *gin.Context) {
 	userId := c.GetInt64("userId")
 	if userId == 0 {
 		c.JSON(http.StatusUnauthorized, gin.H{"message": "unauthorized"})
@@ -47,11 +42,20 @@ func cancelRegistration(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"message": "invalid event id"})
 		return
 	}
+
+	var updatedStatus UpdateRegistrationStatusInput
+	if err := c.ShouldBindJSON(&updatedStatus); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"message": "invalid request body",
+		})
+		return
+	}
+
 	var event models.Event
 	event.ID = eventId
-	err = event.CancelRegistration(userId)
+	err = event.UpdateRegistration(userId, updatedStatus.Status)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"message": "can`t delete registration"})
+		c.JSON(http.StatusInternalServerError, err.Error())
 		return
 	}
 }

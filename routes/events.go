@@ -1,14 +1,13 @@
 package routes
 
 import (
-	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
 
 	"github.com/AMmetro/identity/models"
+	"github.com/AMmetro/identity/utils"
 	"github.com/gin-gonic/gin"
-	validator "github.com/go-playground/validator/v10"
 )
 
 func getEvents(context *gin.Context) {
@@ -34,43 +33,24 @@ func getEvent(context *gin.Context) {
 	context.JSON(http.StatusOK, event)
 }
 
-func formatValidationErrors(err error) []string {
-	var vErrs validator.ValidationErrors
-	if errors.As(err, &vErrs) {
-		out := make([]string, 0, len(vErrs))
-		for _, ve := range vErrs {
-			field := ve.Field() // short name of the struct field
-			switch ve.Tag() {
-			case "required":
-				out = append(out, fmt.Sprintf("%s is required", field))
-			default:
-				out = append(out, fmt.Sprintf("%s failed on the '%s' tag", field, ve.Tag()))
-			}
-		}
-		return out
-	}
-	return []string{err.Error()}
-}
-
 func createEvent(context *gin.Context) {
-
 	userId := context.GetInt64("userId")
-
 	var event models.Event
 	event.UserID = userId
 
 	// Use ShouldBindJSON for binding validation
 	if err := context.ShouldBindJSON(&event); err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})
+		context.JSON(http.StatusBadRequest, gin.H{"errors": utils.FormatValidationErrors(err)})
 		return
 	}
 
-	if err := event.Save(); err != nil {
+	err := event.Save()
+	if err != nil {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	context.JSON(http.StatusCreated, gin.H{"message": "event created successfully", "event": event})
+	event.RegisterForEvent(userId)
+	context.JSON(http.StatusCreated, gin.H{"message": "event created and registered", "event": event})
 }
 
 func updateEvent(context *gin.Context) {
@@ -95,7 +75,7 @@ func updateEvent(context *gin.Context) {
 	var updatedEvent models.Event
 	err = context.ShouldBindJSON(&updatedEvent)
 	if err != nil {
-		context.JSON(http.StatusBadRequest, gin.H{"errors": formatValidationErrors(err)})
+		context.JSON(http.StatusBadRequest, gin.H{"errors": utils.FormatValidationErrors(err)})
 		return
 	}
 

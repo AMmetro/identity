@@ -101,20 +101,3 @@ func (event Event) DeleteEvent() error {
 	_, err = stmt.Exec(event.ID)
 	return err
 }
-
-func (e Event) RegisterForEvent(userId int64) (int64, error) {
-	query := `INSERT INTO registrations (event_id, user_id) VALUES (?, ?)`
-
-	result, err := db.DB.Exec(query, e.ID, userId)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.LastInsertId()
-}
-
-func (e Event) CancelRegistration(userId int64) error {
-	query := `DELETE FROM registrations WHERE event_id = ? AND user_id = ?`
-	_, err := db.DB.Exec(query, e.ID, userId)
-	return err
-}

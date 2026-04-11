@@ -58,6 +58,8 @@ func createTables() {
 	 id INTEGER PRIMARY KEY AUTOINCREMENT,
      event_id INTEGER,
 	 user_id INTEGER,
+	 status TEXT CHECK(status IN ('pending','progress', 'success', 'cancelled')) DEFAULT 'pending',
+     UNIQUE(event_id, user_id),
 	 FOREIGN KEY (event_id) REFERENCES events(id),
 	 FOREIGN KEY (user_id) REFERENCES users(id)
 	);`
