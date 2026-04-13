@@ -3,7 +3,7 @@ package repositories
 import (
 	"database/sql"
 
-	"github.com/AMmetro/identity/db"
+	"github.com/AMmetro/identity/internal/db"
 	"github.com/AMmetro/identity/models"
 )
 
@@ -23,7 +23,6 @@ func CreateEvent(e *models.Event) error {
 	return err
 }
 
-// CreateEventTx creates an event using the provided transaction and sets e.ID
 func CreateEventTx(tx *sql.Tx, e *models.Event) error {
 	// Use the provided transaction to execute the insert
 	query := `INSERT INTO events (name, description, location, date_time, user_id) VALUES (?, ?, ?, ?, ?)`

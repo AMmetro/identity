@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"net/http"
@@ -25,7 +25,7 @@ func signup(context *gin.Context) {
 }
 
 func login(context *gin.Context) {
-	var user models.User // there user have id = ZERO value
+	var user models.User
 	err := context.BindJSON(&user)
 	if err != nil {
 		context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})

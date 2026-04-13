@@ -1,4 +1,4 @@
-package middlewares
+package middleware
 
 import (
 	"net/http"
@@ -9,10 +9,8 @@ import (
 )
 
 func Authenticate(context *gin.Context) {
-	authHeader := context.Request.Header.Get("Authorization") // Header = map[string][]string
-	// authHeader := context.GetHeader("Authorization") // updated wrapper with Gin
+	authHeader := context.Request.Header.Get("Authorization")
 	if authHeader == "" {
-		// context.JSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
 		context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
 		return
 	}
@@ -23,7 +21,6 @@ func Authenticate(context *gin.Context) {
 
 	userId, err := utils.Verifytoken(token)
 	if err != nil {
-		// context.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
 		context.AbortWithStatusJSON(http.StatusUnauthorized, gin.H{"error": "missing authorization token"})
 		return
 	}

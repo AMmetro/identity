@@ -3,8 +3,8 @@ package services
 import (
 	"errors"
 
+	"github.com/AMmetro/identity/internal/repositories"
 	"github.com/AMmetro/identity/models"
-	"github.com/AMmetro/identity/repositories"
 	"github.com/AMmetro/identity/utils"
 )
 
@@ -18,7 +18,7 @@ func RegisterUser(u *models.User) error {
 }
 
 func AuthenticateUser(email, password string) (int64, error) {
-	user, err := repositories.FindUserByEmail(email)
+	user, err := repositories.GetUserByEmail(email)
 	if err != nil {
 		return 0, errors.New("credentials invalid")
 	}

@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"fmt"
@@ -85,25 +85,6 @@ func updateEvent(context *gin.Context) {
 		context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
-
-	// var newEvent models.Event
-	// 	err = context.BindJSON(&newEvent)
-	// if err != nil {
-	// 	context.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
-	// 	return
-	// }
-
-	// var updatedEvent models.Event
-	// existEvent.Name = newEvent.Name
-	// existEvent.Description = newEvent.Description
-	// existEvent.Location = newEvent.Location
-	// existEvent.DateTime = newEvent.DateTime
-	// existEvent.UserID = eventId
-
-	// err = existEvent.UpdateEvent()
-	// if err != nil {
-	// 	context.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
-	// }
 
 	context.JSON(http.StatusAccepted, gin.H{"message": "Event updated successfully!", "event": updatedEvent})
 }

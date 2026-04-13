@@ -1,7 +1,7 @@
-package routes
+package handlers
 
 import (
-	"github.com/AMmetro/identity/middlewares"
+	"github.com/AMmetro/identity/pkg/middleware"
 	"github.com/gin-gonic/gin"
 )
 
@@ -9,7 +9,7 @@ func RegisterEventsRouts(server *gin.Engine) {
 
 	authenticated := server.Group("/")
 
-	authenticated.Use(middlewares.Authenticate)
+	authenticated.Use(middleware.Authenticate)
 
 	authenticated.POST("/events", createEvent)
 	authenticated.PUT("/events/:id", updateEvent)

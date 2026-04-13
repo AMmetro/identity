@@ -2,8 +2,9 @@ package repositories
 
 import (
 	"database/sql"
+	"errors"
 
-	"github.com/AMmetro/identity/db"
+	"github.com/AMmetro/identity/internal/db"
 	"github.com/AMmetro/identity/models"
 )
 
@@ -28,8 +29,28 @@ func CreateRegistrationTx(tx *sql.Tx, eventId, userId int64) (int64, error) {
 
 func UpdateRegistrationStatus(eventId, userId int64, status string) error {
 	query := `UPDATE registrations SET status = ? WHERE event_id = ? AND user_id = ?`
-	_, err := db.DB.Exec(query, status, eventId, userId)
-	return err
+	res, err := db.DB.Exec(query, status, eventId, userId)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("no rows updated")
+	}
+	return nil
+}
+
+func GetRegistrationByIds(eventId, userId int64) (string, error) {
+	query := `SELECT status FROM registrations WHERE event_id = ? AND user_id = ?`
+	var status string
+	err := db.DB.QueryRow(query, eventId, userId).Scan(&status)
+	if err != nil {
+		return "", err
+	}
+	return status, nil
 }
 
 func GetAllRegistrations() ([]models.Registration, error) {

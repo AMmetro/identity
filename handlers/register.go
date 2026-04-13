@@ -1,4 +1,4 @@
-package routes
+package handlers
 
 import (
 	"net/http"
@@ -40,6 +40,12 @@ func updateRegistrationStatus(c *gin.Context) {
 		})
 		return
 	}
+
+	// fmt.Printf("Updating registration status for user %d and event %d to %s\n", userId, eventId, updatedStatus.Status)
+	// fmt.Printf("Updating registration status for user %d and event %d to %s\n", userId, eventId, updatedStatus.Status)
+	// fmt.Printf("Updating registration status for user %d and event %d to %s\n", userId, eventId, updatedStatus.Status)
+	// fmt.Printf("Updating registration status for user %d and event %d to %s\n", userId, eventId, updatedStatus.Status)
+	// fmt.Printf("Updating registration status for user %d and event %d to %s\n", userId, eventId, updatedStatus.Status)
 
 	err = services.UpdateRegistrationStatus(eventId, userId, updatedStatus.Status)
 	if err != nil {

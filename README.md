@@ -23,7 +23,19 @@ GET http://localhost:8080/events
     - models:        repositories 
     - db:            initial DB
     - utils:         utils
-     
 
-<!-- todo  -->
-# replace routs with server registrations
+/cmd            // точка входа в приложение, отдельно для каждого сервиса или билда
+/internal       // внутренние пакеты, не доступные вне модуля
+/pkg            // публичные библиотеки, используемые другими проектами
+/config         // конфигурационные файлы и схемы
+/apis           // определения API, например Protobuf или OpenAPI
+/migrations     // миграции базы данных
+/pkg/logger     // логирование
+/pkg/middleware // промежуточное ПО (middleware)
+/services       // бизнес-логика, связанные с конкретной domain
+/handlers       // HTTP handlers / controllers
+/models         // модели данных
+/utils          // вспомогательные функции и утилиты
+/tests          // тесты
+Dockerfile     // описание контейнера
+Makefile       // сборочные команды

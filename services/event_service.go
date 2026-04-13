@@ -1,9 +1,9 @@
 package services
 
 import (
-	"github.com/AMmetro/identity/db"
+	"github.com/AMmetro/identity/internal/db"
+	"github.com/AMmetro/identity/internal/repositories"
 	"github.com/AMmetro/identity/models"
-	"github.com/AMmetro/identity/repositories"
 )
 
 func CreateEvent(e *models.Event) error {

@@ -1,7 +1,7 @@
 package repositories
 
 import (
-	"github.com/AMmetro/identity/db"
+	"github.com/AMmetro/identity/internal/db"
 	"github.com/AMmetro/identity/models"
 )
 
@@ -21,20 +21,9 @@ func CreateUser(u *models.User) error {
 	return err
 }
 
-func FindUserByEmail(email string) (*models.User, error) {
+func GetUserByEmail(email string) (*models.User, error) {
 	query := `SELECT id, email, password FROM users WHERE email = ?`
 	row := db.DB.QueryRow(query, email)
-	var user models.User
-	err := row.Scan(&user.ID, &user.Email, &user.Password)
-	if err != nil {
-		return nil, err
-	}
-	return &user, nil
-}
-
-func GetUserByID(id int64) (*models.User, error) {
-	query := `SELECT id, email, password FROM users WHERE id = ?`
-	row := db.DB.QueryRow(query, id)
 	var user models.User
 	err := row.Scan(&user.ID, &user.Email, &user.Password)
 	if err != nil {
